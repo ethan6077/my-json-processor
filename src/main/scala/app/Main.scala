@@ -40,12 +40,17 @@ object Hello extends IOApp {
   }
 
   private def processJson(json: Json): IO[Unit] = {
-     IO(println(s"keys: ${getKeys(json)}"))
+    val printableKeys: String = getPrintableKeys(getKeys(json))
+     IO(println(s"keys: $printableKeys"))
   }
 
-  private def getKeys(json: Json): String = {
-    val keys: Option[List[String]] = json.hcursor.keys.map(_.toList)
-    val printableKeys: String = keys.map(_.mkString(", ")).getOrElse("")
-    printableKeys
+  private def getKeys(json: Json): Option[List[String]] = {
+    json.hcursor.keys.map(_.toList)
   }
+
+  private def getPrintableKeys(keys: Option[List[String]]): String = {
+    keys.map(_.mkString(", ")).getOrElse("")
+  }
+
+
 }
