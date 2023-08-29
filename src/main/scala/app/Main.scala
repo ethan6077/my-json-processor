@@ -1,9 +1,11 @@
 package app
 
+import app.models.{AppError, KeyValuePair}
 import cats.effect.{ExitCode, IO, IOApp}
-import io.circe.{Json, ParsingFailure}
+import io.circe.Decoder.Result
 import io.circe.literal.JsonStringContext
 import io.circe.parser._
+import io.circe.{Json, ParsingFailure}
 
 object Hello extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
@@ -40,8 +42,11 @@ object Hello extends IOApp {
   }
 
   private def processJson(json: Json): IO[Unit] = {
-    val printableKeys: String = getPrintableKeys(getKeys(json))
-     IO(println(s"keys: $printableKeys"))
+//    val printableKeys: String = getPrintableKeys(getKeys(json))
+//     IO(println(s"keys: $printableKeys"))
+
+    val values: List[KeyValuePair] = getValues(json)
+    IO(println(s"values ===> ${getPrintableValues(values)}"))
   }
 
   private def getKeys(json: Json): Option[List[String]] = {
@@ -52,5 +57,27 @@ object Hello extends IOApp {
     keys.map(_.mkString(", ")).getOrElse("")
   }
 
+  private def getValueByKey(json: Json, key: String): String = {
+    val decodeRes: Result[String] = json.hcursor.downField(key).as[String]
+
+    decodeRes match {
+      case Right(value) => value
+      case Left(_) => ""
+    }
+  }
+
+  private def getValues(json: Json): List[KeyValuePair] = {
+    val keys: Option[List[String]] = getKeys(json)
+    keys match {
+      case Some(keyList) => keyList.map {
+        k: String => KeyValuePair(k, getValueByKey(json, k))
+      }
+      case None => List()
+    }
+  }
+
+  private def getPrintableValues(values: List[KeyValuePair]): String = {
+    values.map(_.toString).mkString(", ")
+  }
 
 }
